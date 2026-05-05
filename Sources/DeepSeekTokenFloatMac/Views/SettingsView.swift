@@ -10,6 +10,7 @@ struct SettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             header
+            languageSection
             apiKeySection
             dataSourceSection
             localDataSection
@@ -17,26 +18,53 @@ struct SettingsView: View {
             statusMessage
         }
         .padding(24)
-        .frame(width: 520, height: 610)
+        .frame(width: 520, height: 700)
         .background(Color(red: 0.96, green: 0.96, blue: 0.98))
-        .alert("Delete local usage data?", isPresented: $confirmDeleteUsage) {
-            Button("Delete", role: .destructive) {
+        .alert(strings.deleteLocalUsageAlertTitle, isPresented: $confirmDeleteUsage) {
+            Button(strings.deleteButton, role: .destructive) {
                 appState.deleteLocalUsageData()
             }
-            Button("Cancel", role: .cancel) {}
+            Button(strings.cancelButton, role: .cancel) {}
         } message: {
-            Text("This removes imported/local usage records from this Mac. It does not affect DeepSeek.")
+            Text(strings.deleteLocalUsageAlertMessage)
         }
+    }
+
+    private var strings: LocalizedStrings {
+        appState.strings
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Settings")
+            Text(strings.settingsTitle)
                 .font(.system(size: 28, weight: .semibold))
-            Text("DeepSeek Token Monitor keeps secrets in Keychain and usage records in a local SQLite database.")
+            Text(strings.settingsSubtitle)
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var languageSection: some View {
+        SettingsCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(strings.languageTitle)
+                    .font(.system(size: 15, weight: .semibold))
+
+                Text(strings.languageDescription)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Picker(strings.languageTitle, selection: $appState.language) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.displayName)
+                            .tag(language)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+            }
         }
     }
 
@@ -44,10 +72,10 @@ struct SettingsView: View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("DeepSeek API Key")
+                    Text(strings.apiKeyTitle)
                         .font(.system(size: 15, weight: .semibold))
                     Spacer()
-                    Text(appState.apiKeySaved ? "Saved in Keychain" : "Not saved")
+                    Text(appState.apiKeySaved ? strings.savedInKeychain : strings.notSaved)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(appState.apiKeySaved ? .green : .secondary)
                 }
@@ -55,11 +83,11 @@ struct SettingsView: View {
                 HStack(spacing: 8) {
                     PasteFriendlySecureField(
                         text: $apiKeyInput,
-                        placeholder: appState.apiKeySaved ? "Enter a new key to replace the saved key" : "sk-..."
+                        placeholder: appState.apiKeySaved ? strings.apiKeyReplacementPlaceholder : "sk-..."
                     )
                     .frame(height: 24)
 
-                    Button("Paste") {
+                    Button(strings.pasteButton) {
                         if let pasted = NSPasteboard.general.string(forType: .string) {
                             apiKeyInput = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
                         }
@@ -67,14 +95,14 @@ struct SettingsView: View {
                 }
 
                 HStack {
-                    Button("Save") {
+                    Button(strings.saveButton) {
                         appState.saveAPIKey(apiKeyInput)
                         apiKeyInput = ""
                     }
                     .keyboardShortcut(.defaultAction)
                     .disabled(apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                    Button("Test Connection") {
+                    Button(strings.testConnectionButton) {
                         appState.testConnection(
                             candidateKey: apiKeyInput.isEmpty ? nil : apiKeyInput
                         )
@@ -82,7 +110,7 @@ struct SettingsView: View {
 
                     Spacer()
 
-                    Button("Clear API Key", role: .destructive) {
+                    Button(strings.clearAPIKeyButton, role: .destructive) {
                         appState.clearAPIKey()
                         apiKeyInput = ""
                     }
@@ -95,16 +123,18 @@ struct SettingsView: View {
     private var dataSourceSection: some View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Data Source")
+                Text(strings.dataSourceTitle)
                     .font(.system(size: 15, weight: .semibold))
 
-                Text("Official balance comes from `GET https://api.deepseek.com/user/balance` with Bearer authentication.")
+                Text(strings.officialBalanceDescription)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Text("Token usage is currently local-only. DeepSeek public API docs do not expose a historical usage aggregation endpoint. Import CSV records to populate Today, Week, 30D, and All.")
+                Text(strings.tokenUsageDescription)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .textSelection(.enabled)
         }
@@ -113,26 +143,26 @@ struct SettingsView: View {
     private var localDataSection: some View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Local Usage Data")
+                Text(strings.localUsageDataTitle)
                     .font(.system(size: 15, weight: .semibold))
 
-                Text("CSV import accepts timestamp, input_tokens, output_tokens, and optional model, total_tokens, estimated_cost, source, provider, and id columns.")
+                Text(strings.localUsageDescription)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack {
-                    Button("Import Usage CSV") {
+                    Button(strings.importUsageCSVButton) {
                         appState.importUsageCSV()
                     }
 
-                    Button("Reload") {
+                    Button(strings.reloadButton) {
                         appState.reloadUsage()
                     }
 
                     Spacer()
 
-                    Button("Delete Local Data", role: .destructive) {
+                    Button(strings.deleteLocalDataButton, role: .destructive) {
                         confirmDeleteUsage = true
                     }
                 }

@@ -1,13 +1,16 @@
 import AppKit
+import Combine
 import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FloatingPanel?
     private let appState = AppState.shared
+    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildApplicationMenu()
+        observeLanguageChanges()
         showFloatingPanel()
     }
 
@@ -38,15 +41,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func buildApplicationMenu() {
+        let strings = appState.strings
         let mainMenu = NSMenu()
         let appMenuItem = NSMenuItem()
         let appMenu = NSMenu()
         let editMenuItem = NSMenuItem()
-        let editMenu = NSMenu(title: "Edit")
+        let editMenu = NSMenu(title: strings.editMenuTitle)
 
         appMenu.addItem(
             NSMenuItem(
-                title: "Settings...",
+                title: strings.settingsMenuTitle,
                 action: #selector(openSettings),
                 keyEquivalent: ","
             )
@@ -54,7 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appMenu.addItem(.separator())
         appMenu.addItem(
             NSMenuItem(
-                title: "Quit DeepSeek Token Monitor",
+                title: strings.quitMenuTitle,
                 action: #selector(NSApplication.terminate(_:)),
                 keyEquivalent: "q"
             )
@@ -65,21 +69,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         editMenu.addItem(
             NSMenuItem(
-                title: "Cut",
+                title: strings.cutMenuTitle,
                 action: #selector(NSText.cut(_:)),
                 keyEquivalent: "x"
             )
         )
         editMenu.addItem(
             NSMenuItem(
-                title: "Copy",
+                title: strings.copyMenuTitle,
                 action: #selector(NSText.copy(_:)),
                 keyEquivalent: "c"
             )
         )
         editMenu.addItem(
             NSMenuItem(
-                title: "Paste",
+                title: strings.pasteMenuTitle,
                 action: #selector(NSText.paste(_:)),
                 keyEquivalent: "v"
             )
@@ -87,7 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(.separator())
         editMenu.addItem(
             NSMenuItem(
-                title: "Select All",
+                title: strings.selectAllMenuTitle,
                 action: #selector(NSText.selectAll(_:)),
                 keyEquivalent: "a"
             )
@@ -100,5 +104,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openSettings() {
         SettingsWindowController.shared.show(appState: appState)
+    }
+
+    private func observeLanguageChanges() {
+        appState.$language
+            .dropFirst()
+            .sink { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                buildApplicationMenu()
+                SettingsWindowController.shared.updateTitle(appState: appState)
+            }
+            .store(in: &cancellables)
     }
 }

@@ -16,6 +16,15 @@ final class AppState: ObservableObject {
     @Published private(set) var apiKeySaved: Bool = false
     @Published var settingsMessage: String?
     @Published var settingsMessageIsError: Bool = false
+    @Published var language: AppLanguage = AppLanguage.saved() {
+        didSet {
+            UserDefaults.standard.set(language.rawValue, forKey: UserDefaultsKeys.language)
+        }
+    }
+
+    var strings: LocalizedStrings {
+        LocalizedStrings(language: language)
+    }
 
     private let keychain = KeychainStore()
     private let balanceClient = DeepSeekBalanceClient()
@@ -42,7 +51,7 @@ final class AppState: ObservableObject {
         let apiKey: String
         do {
             guard let savedKey = try keychain.readAPIKey(), !savedKey.isEmpty else {
-                balanceStatus = .failed("Add a DeepSeek API Key in Settings first.")
+                balanceStatus = .failed(strings.addDeepSeekAPIKeyInSettings)
                 return
             }
             apiKey = savedKey
@@ -67,7 +76,7 @@ final class AppState: ObservableObject {
     func saveAPIKey(_ rawValue: String) {
         let apiKey = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !apiKey.isEmpty else {
-            showSettingsMessage("Enter a DeepSeek API Key before saving.", isError: true)
+            showSettingsMessage(strings.enterAPIKeyBeforeSaving, isError: true)
             return
         }
 
@@ -75,7 +84,7 @@ final class AppState: ObservableObject {
             try keychain.saveAPIKey(apiKey)
             apiKeySaved = true
             balanceStatus = .idle
-            showSettingsMessage("API Key saved to macOS Keychain.", isError: false)
+            showSettingsMessage(strings.apiKeySavedMessage, isError: false)
         } catch {
             showSettingsMessage(error.localizedDescription, isError: true)
         }
@@ -86,7 +95,7 @@ final class AppState: ObservableObject {
             try keychain.deleteAPIKey(allowMissing: true)
             apiKeySaved = false
             balanceStatus = .idle
-            showSettingsMessage("API Key removed from Keychain.", isError: false)
+            showSettingsMessage(strings.apiKeyRemovedMessage, isError: false)
         } catch {
             showSettingsMessage(error.localizedDescription, isError: true)
         }
@@ -101,7 +110,7 @@ final class AppState: ObservableObject {
         } else {
             do {
                 guard let savedKey = try keychain.readAPIKey(), !savedKey.isEmpty else {
-                    showSettingsMessage("Save or enter an API Key before testing.", isError: true)
+                    showSettingsMessage(strings.saveOrEnterAPIKeyBeforeTesting, isError: true)
                     return
                 }
                 apiKey = savedKey
@@ -111,15 +120,14 @@ final class AppState: ObservableObject {
             }
         }
 
-        showSettingsMessage("Testing DeepSeek connection...", isError: false)
+        showSettingsMessage(strings.testingDeepSeekConnection, isError: false)
         Task {
             do {
                 let response = try await balanceClient.fetchBalance(apiKey: apiKey)
                 balanceStatus = .loaded(
                     BalanceSnapshot(response: response, updatedAt: Date())
                 )
-                let availability = response.isAvailable ? "available" : "not available"
-                showSettingsMessage("Connection OK. Account is \(availability).", isError: false)
+                showSettingsMessage(strings.connectionOK(isAvailable: response.isAvailable), isError: false)
             } catch {
                 showSettingsMessage(error.localizedDescription, isError: true)
             }
@@ -128,7 +136,7 @@ final class AppState: ObservableObject {
 
     func importUsageCSV() {
         let panel = NSOpenPanel()
-        panel.title = "Import DeepSeek Usage CSV"
+        panel.title = strings.importUsageCSVPanelTitle
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.commaSeparatedText, .plainText]
@@ -140,12 +148,12 @@ final class AppState: ObservableObject {
         do {
             let records = try importer.records(from: url)
             guard let database else {
-                showSettingsMessage("Local usage database is unavailable.", isError: true)
+                showSettingsMessage(strings.localUsageDatabaseUnavailable, isError: true)
                 return
             }
             try database.insert(records)
             reloadUsage()
-            showSettingsMessage("Imported \(records.count) local usage record(s).", isError: false)
+            showSettingsMessage(strings.importedLocalUsageRecords(records.count), isError: false)
         } catch {
             showSettingsMessage(error.localizedDescription, isError: true)
         }
@@ -154,12 +162,12 @@ final class AppState: ObservableObject {
     func deleteLocalUsageData() {
         do {
             guard let database else {
-                showSettingsMessage("Local usage database is unavailable.", isError: true)
+                showSettingsMessage(strings.localUsageDatabaseUnavailable, isError: true)
                 return
             }
             try database.deleteAllUsageRecords()
             reloadUsage()
-            showSettingsMessage("Local usage records deleted.", isError: false)
+            showSettingsMessage(strings.localUsageRecordsDeleted, isError: false)
         } catch {
             showSettingsMessage(error.localizedDescription, isError: true)
         }

@@ -13,6 +13,7 @@ This is an early MVP. It is a native macOS app, not an Electron app, web dashboa
 - Double-click opens Settings.
 - Official DeepSeek balance lookup via `GET https://api.deepseek.com/user/balance`.
 - Settings window for pasting, saving, testing, and clearing the DeepSeek API Key.
+- Manual language switch in Settings: English and Simplified Chinese.
 - API Key is stored in macOS Keychain, not in the repository.
 - Local SQLite usage database.
 - Manual CSV import for local usage records.

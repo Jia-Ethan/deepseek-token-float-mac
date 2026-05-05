@@ -27,6 +27,7 @@ struct FloatingCardView: View {
         .overlay(
             WidgetClickLayer(
                 selectedSpan: appState.selectedSpan,
+                language: appState.language,
                 onPressChanged: { isPressed = $0 },
                 onSingleClick: toggleMode,
                 onDoubleClick: {
@@ -40,7 +41,7 @@ struct FloatingCardView: View {
                 }
             )
         )
-        .help("Click to switch usage/balance. Double-click for Settings. Right-click for time span.")
+        .help(appState.strings.widgetHelp)
     }
 
     private var numberStrip: some View {
@@ -68,8 +69,8 @@ struct FloatingCardView: View {
         case .usage:
             let totalTokens = appState.usageSummary.totalTokens
             let footer = appState.usageSummary.recordCount == 0
-                ? "\(appState.selectedSpan.label) / No local records"
-                : "\(appState.selectedSpan.label) / tokens"
+                ? "\(appState.selectedSpan.label(language: appState.language)) / \(appState.strings.noLocalRecords)"
+                : "\(appState.selectedSpan.label(language: appState.language)) / \(appState.strings.tokens)"
 
             return WidgetDisplay(
                 segments: tokenSegments(totalTokens),
@@ -82,33 +83,37 @@ struct FloatingCardView: View {
             case .idle:
                 return WidgetDisplay(
                     segments: ["0"],
-                    footer: appState.apiKeySaved ? "Balance / Tap to refresh" : "Balance / Add API Key",
+                    footer: appState.apiKeySaved
+                        ? "\(appState.strings.balance) / \(appState.strings.tapToRefresh)"
+                        : "\(appState.strings.balance) / \(appState.strings.addAPIKey)",
                     identity: "balance-idle-\(appState.apiKeySaved)"
                 )
             case .loading:
                 return WidgetDisplay(
                     segments: ["..."],
-                    footer: "Balance / Refreshing",
+                    footer: "\(appState.strings.balance) / \(appState.strings.refreshing)",
                     identity: "balance-loading"
                 )
             case .failed:
                 return WidgetDisplay(
                     segments: ["0"],
-                    footer: appState.apiKeySaved ? "Balance / Error" : "Balance / Add API Key",
+                    footer: appState.apiKeySaved
+                        ? "\(appState.strings.balance) / \(appState.strings.error)"
+                        : "\(appState.strings.balance) / \(appState.strings.addAPIKey)",
                     identity: "balance-failed-\(appState.apiKeySaved)"
                 )
             case .loaded(let snapshot):
                 guard let first = snapshot.response.balanceInfos.first else {
                     return WidgetDisplay(
                         segments: ["0"],
-                        footer: "Balance / Unavailable",
+                        footer: "\(appState.strings.balance) / \(appState.strings.unavailable)",
                         identity: "balance-empty"
                     )
                 }
 
                 return WidgetDisplay(
                     segments: [trimBalance(first.totalBalance)],
-                    footer: "\(first.currency) / Updated \(shortTime(snapshot.updatedAt))",
+                    footer: "\(first.currency) / \(appState.strings.updated) \(shortTime(snapshot.updatedAt))",
                     identity: "balance-loaded-\(first.currency)-\(first.totalBalance)-\(snapshot.updatedAt.timeIntervalSince1970)"
                 )
             }
@@ -243,6 +248,7 @@ private struct NumberTile: View {
 
 private struct WidgetClickLayer: NSViewRepresentable {
     let selectedSpan: TimeSpan
+    let language: AppLanguage
     let onPressChanged: (Bool) -> Void
     let onSingleClick: () -> Void
     let onDoubleClick: () -> Void
@@ -297,7 +303,7 @@ private struct WidgetClickLayer: NSViewRepresentable {
             let menu = NSMenu()
             for span in TimeSpan.allCases {
                 let item = NSMenuItem(
-                    title: span.accessibilityLabel,
+                    title: span.menuLabel(language: parent.language),
                     action: #selector(selectSpan(_:)),
                     keyEquivalent: ""
                 )

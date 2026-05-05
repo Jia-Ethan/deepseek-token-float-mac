@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 
+@MainActor
 final class SettingsWindowController {
     static let shared = SettingsWindowController()
 
@@ -10,6 +11,7 @@ final class SettingsWindowController {
 
     func show(appState: AppState) {
         if let window {
+            window.title = appState.strings.settingsWindowTitle
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
@@ -20,9 +22,9 @@ final class SettingsWindowController {
 
         let hostingController = NSHostingController(rootView: rootView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "DeepSeek Token Monitor Settings"
+        window.title = appState.strings.settingsWindowTitle
         window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 520, height: 610))
+        window.setContentSize(NSSize(width: 520, height: 700))
         window.center()
         window.isReleasedWhenClosed = false
         window.setFrameAutosaveName("DeepSeekTokenMonitorSettings")
@@ -30,5 +32,9 @@ final class SettingsWindowController {
         NSApp.activate(ignoringOtherApps: true)
 
         self.window = window
+    }
+
+    func updateTitle(appState: AppState) {
+        window?.title = appState.strings.settingsWindowTitle
     }
 }

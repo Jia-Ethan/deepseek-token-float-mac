@@ -11,28 +11,71 @@ enum TimeSpan: String, CaseIterable, Identifiable {
     }
 
     var label: String {
-        switch self {
-        case .today:
-            return "Today"
-        case .week:
-            return "Week"
-        case .thirtyDays:
-            return "30D"
-        case .all:
-            return "All"
-        }
+        label(language: .english)
     }
 
     var accessibilityLabel: String {
+        menuLabel(language: .english)
+    }
+
+    func label(language: AppLanguage) -> String {
         switch self {
         case .today:
-            return "Today"
+            switch language {
+            case .english:
+                return "Today"
+            case .simplifiedChinese:
+                return "今天"
+            }
         case .week:
-            return "This week"
+            switch language {
+            case .english:
+                return "Week"
+            case .simplifiedChinese:
+                return "本周"
+            }
         case .thirtyDays:
-            return "Last 30 days"
+            return "30D"
         case .all:
-            return "All local records"
+            switch language {
+            case .english:
+                return "All"
+            case .simplifiedChinese:
+                return "全部"
+            }
+        }
+    }
+
+    func menuLabel(language: AppLanguage) -> String {
+        switch self {
+        case .today:
+            switch language {
+            case .english:
+                return "Today"
+            case .simplifiedChinese:
+                return "今天"
+            }
+        case .week:
+            switch language {
+            case .english:
+                return "This week"
+            case .simplifiedChinese:
+                return "本周"
+            }
+        case .thirtyDays:
+            switch language {
+            case .english:
+                return "Last 30 days"
+            case .simplifiedChinese:
+                return "最近 30 天"
+            }
+        case .all:
+            switch language {
+            case .english:
+                return "All local records"
+            case .simplifiedChinese:
+                return "全部本地记录"
+            }
         }
     }
 
