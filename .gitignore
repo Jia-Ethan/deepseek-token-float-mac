@@ -30,6 +30,24 @@ playground.xcworkspace
 # .swiftpm
 
 .build/
+.swiftpm/
+Package.resolved
+
+# Local secrets and runtime data
+.env
+.env.*
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.key
+*.pem
+*.p12
+*.mobileprovision
+DerivedData/
+
+# macOS
+.DS_Store
 
 # CocoaPods
 #
