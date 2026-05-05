@@ -6,29 +6,49 @@ struct FloatingCardView: View {
 
     @State private var widgetMode: WidgetMode = .usage
     @State private var isPressed = false
+    @State private var rippleOrigin: CGPoint = .zero
+    @State private var showRipple = false
 
     var body: some View {
         ZStack {
-            cardBackground
-
-            VStack(spacing: 18) {
-                Spacer(minLength: 0)
-                numberStrip
-                footer
-                Spacer(minLength: 0)
+            // Dynamic background behind the glass
+            ZStack {
+                AnimatedGradientBackground(theme: appState.theme)
+                ParticleField(theme: appState.theme)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 20)
+            .frame(width: 360, height: 170)
+            .clipShape(RoundedRectangle(cornerRadius: appState.theme.cardCornerRadius, style: .continuous))
+
+            // Glass card wraps the content
+            GlassCard(theme: appState.theme) {
+                VStack(spacing: 18) {
+                    Spacer(minLength: 0)
+                    numberStrip
+                    footer
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
+            }
+
+            // Click ripple overlay
+            if showRipple {
+                RippleEffect(origin: rippleOrigin, accent: appState.theme.accent)
+            }
         }
         .frame(width: 360, height: 170)
-        .scaleEffect(isPressed ? 0.985 : 1)
-        .animation(.spring(response: 0.18, dampingFraction: 0.82), value: isPressed)
-        .animation(.spring(response: 0.28, dampingFraction: 0.86), value: widgetMode)
+        .scaleEffect(isPressed ? AppAnimation.pressScaleAmount : 1)
+        .animation(AppAnimation.pressScale, value: isPressed)
+        .animation(AppAnimation.themeTransition, value: widgetMode)
         .overlay(
             WidgetClickLayer(
                 selectedSpan: appState.selectedSpan,
                 language: appState.language,
-                onPressChanged: { isPressed = $0 },
+                onPressChanged: { pressed in
+                    withAnimation(AppAnimation.pressScale) {
+                        isPressed = pressed
+                    }
+                },
                 onSingleClick: toggleMode,
                 onDoubleClick: {
                     SettingsWindowController.shared.show(appState: appState)
@@ -38,31 +58,49 @@ struct FloatingCardView: View {
                     if widgetMode == .usage {
                         appState.reloadUsage()
                     }
+                },
+                onRippleAt: { point in
+                    rippleOrigin = point
+                    showRipple = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AppAnimation.rippleDuration) {
+                        showRipple = false
+                    }
                 }
             )
         )
         .help(appState.strings.widgetHelp)
     }
 
+    // MARK: - Number Strip
+
     private var numberStrip: some View {
         HStack(spacing: 14) {
             ForEach(Array(display.segments.enumerated()), id: \.offset) { _, segment in
-                NumberTile(text: segment, segmentCount: display.segments.count)
+                NumberTile(
+                    text: segment,
+                    segmentCount: display.segments.count,
+                    theme: appState.theme
+                )
+                .numberChangeAnimation(trigger: display.identity)
             }
         }
         .transition(.opacity.combined(with: .scale(scale: 0.96)))
         .id(display.identity)
     }
 
+    // MARK: - Footer
+
     private var footer: some View {
         Text(display.footer)
             .font(.system(size: 19, weight: .semibold, design: .rounded))
             .tracking(0.4)
-            .foregroundStyle(Color.white.opacity(0.78))
+            .foregroundStyle(appState.theme.textSecondary)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .contentTransition(.opacity)
     }
+
+    // MARK: - Display Logic (unchanged from original)
 
     private var display: WidgetDisplay {
         switch widgetMode {
@@ -120,36 +158,10 @@ struct FloatingCardView: View {
         }
     }
 
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 36, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .overlay(
-                RoundedRectangle(cornerRadius: 36, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.14, green: 0.28, blue: 0.38).opacity(0.92),
-                                Color(red: 0.08, green: 0.20, blue: 0.30).opacity(0.86)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 36, style: .continuous)
-                    .stroke(Color(red: 0.63, green: 0.78, blue: 0.91).opacity(0.48), lineWidth: 1.2)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 36, style: .continuous)
-                    .stroke(Color.white.opacity(0.16), lineWidth: 0.8)
-                    .padding(1)
-            )
-            .shadow(color: Color.black.opacity(0.26), radius: 26, x: 0, y: 16)
-    }
+    // MARK: - Helpers
 
     private func toggleMode() {
-        withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+        withAnimation(AppAnimation.themeTransition) {
             widgetMode = widgetMode == .usage ? .balance : .usage
         }
 
@@ -204,6 +216,8 @@ struct FloatingCardView: View {
     }
 }
 
+// MARK: - Widget Mode
+
 private enum WidgetMode: Equatable {
     case usage
     case balance
@@ -215,36 +229,86 @@ private struct WidgetDisplay {
     let identity: String
 }
 
+// MARK: - Enhanced Number Tile
+
 private struct NumberTile: View {
     let text: String
     let segmentCount: Int
+    let theme: AppTheme
+
+    @State private var isHovering = false
 
     private var tileWidth: CGFloat {
         switch segmentCount {
-        case 1:
-            return 154
-        case 2:
-            return 128
-        default:
-            return 96
+        case 1:  return 154
+        case 2:  return 128
+        default: return 96
         }
     }
 
     var body: some View {
         Text(text)
-            .font(.system(size: segmentCount == 1 ? 66 : 62, weight: .bold, design: .rounded))
+            .font(.system(
+                size: segmentCount == 1 ? 66 : 62,
+                weight: .bold,
+                design: .rounded
+            ))
             .monospacedDigit()
             .lineLimit(1)
             .minimumScaleFactor(0.42)
-            .foregroundStyle(Color.white.opacity(0.86))
+            .foregroundStyle(theme.textPrimary)
             .frame(width: tileWidth, height: 78)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(red: 0.08, green: 0.22, blue: 0.31).opacity(0.38))
+                    .fill(theme.tileBackground)
             )
-            .contentTransition(.numericText())
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(
+                        isHovering
+                            ? theme.accent.opacity(0.35)
+                            : theme.tileBorder,
+                        lineWidth: 1
+                    )
+            )
+            .shadow(
+                color: theme.accent.opacity(isHovering ? 0.12 : 0),
+                radius: isHovering ? 8 : 0
+            )
+            .onHover { hovering in
+                withAnimation(.easeInOut(duration: 0.22)) {
+                    isHovering = hovering
+                }
+            }
     }
 }
+
+// MARK: - Click Ripple Effect
+
+private struct RippleEffect: View {
+    let origin: CGPoint
+    let accent: Color
+
+    @State private var scale: CGFloat = 0
+    @State private var opacity: Double = AppAnimation.rippleStartOpacity
+
+    var body: some View {
+        Circle()
+            .fill(accent.opacity(opacity))
+            .frame(width: AppAnimation.rippleMaxRadius * 2, height: AppAnimation.rippleMaxRadius * 2)
+            .scaleEffect(scale)
+            .position(origin)
+            .allowsHitTesting(false)
+            .onAppear {
+                withAnimation(.easeOut(duration: AppAnimation.rippleDuration)) {
+                    scale = 1.0
+                    opacity = 0
+                }
+            }
+    }
+}
+
+// MARK: - Widget Click Layer
 
 private struct WidgetClickLayer: NSViewRepresentable {
     let selectedSpan: TimeSpan
@@ -253,6 +317,7 @@ private struct WidgetClickLayer: NSViewRepresentable {
     let onSingleClick: () -> Void
     let onDoubleClick: () -> Void
     let onSelectSpan: (TimeSpan) -> Void
+    let onRippleAt: (CGPoint) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -281,13 +346,21 @@ private struct WidgetClickLayer: NSViewRepresentable {
             parent.onPressChanged(pressed)
         }
 
+        func ripple(at point: NSPoint, in view: NSView) {
+            let converted = view.convert(point, from: nil)
+            parent.onRippleAt(CGPoint(x: converted.x, y: converted.y))
+        }
+
         func scheduleSingleClick() {
             singleClickWorkItem?.cancel()
             let workItem = DispatchWorkItem { [weak self] in
                 self?.parent.onSingleClick()
             }
             singleClickWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + NSEvent.doubleClickInterval, execute: workItem)
+            DispatchQueue.main.asyncAfter(
+                deadline: .now() + NSEvent.doubleClickInterval,
+                execute: workItem
+            )
         }
 
         func doubleClick() {
@@ -331,11 +404,11 @@ private struct WidgetClickLayer: NSViewRepresentable {
         weak var coordinator: Coordinator?
         private var suppressNextMouseUp = false
 
-        override var acceptsFirstResponder: Bool {
-            true
-        }
+        override var acceptsFirstResponder: Bool { true }
 
         override func mouseDown(with event: NSEvent) {
+            coordinator?.ripple(at: event.locationInWindow, in: self)
+
             if event.clickCount >= 2 {
                 suppressNextMouseUp = true
                 coordinator?.doubleClick()

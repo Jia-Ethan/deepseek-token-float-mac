@@ -24,7 +24,7 @@ final class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = appState.strings.settingsWindowTitle
         window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 520, height: 700))
+        window.setContentSize(NSSize(width: 560, height: 860))
         window.center()
         window.isReleasedWhenClosed = false
         window.setFrameAutosaveName("DeepSeekTokenMonitorSettings")

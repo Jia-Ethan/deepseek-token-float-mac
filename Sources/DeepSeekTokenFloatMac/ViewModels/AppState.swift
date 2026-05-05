@@ -21,6 +21,11 @@ final class AppState: ObservableObject {
             UserDefaults.standard.set(language.rawValue, forKey: UserDefaultsKeys.language)
         }
     }
+    @Published var theme: AppTheme = AppTheme.saved() {
+        didSet {
+            theme.save()
+        }
+    }
 
     var strings: LocalizedStrings {
         LocalizedStrings(language: language)
