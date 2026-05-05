@@ -12,7 +12,7 @@ struct FloatingCardView: View {
             balanceFooter
         }
         .padding(18)
-        .frame(minWidth: 320, minHeight: 292)
+        .frame(minWidth: 320, minHeight: 340)
         .background(cardBackground)
         .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .onTapGesture {
@@ -53,6 +53,7 @@ struct FloatingCardView: View {
                     .accessibilityLabel(span.accessibilityLabel)
             }
         }
+        .labelsHidden()
         .pickerStyle(.segmented)
         .controlSize(.small)
     }

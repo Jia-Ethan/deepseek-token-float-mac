@@ -21,7 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let hostingController = NSHostingController(rootView: contentView)
         let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let panelSize = NSSize(width: 344, height: 312)
+        let panelSize = NSSize(width: 344, height: 372)
         let origin = NSPoint(
             x: screenFrame.maxX - panelSize.width - 28,
             y: screenFrame.maxY - panelSize.height - 28
