@@ -6,8 +6,7 @@ final class FloatingPanel: NSPanel {
             contentRect: contentRect,
             styleMask: [
                 .nonactivatingPanel,
-                .fullSizeContentView,
-                .resizable
+                .fullSizeContentView
             ],
             backing: backing,
             defer: flag
@@ -27,8 +26,8 @@ final class FloatingPanel: NSPanel {
         backgroundColor = .clear
         isOpaque = false
         hasShadow = true
-        minSize = NSSize(width: 320, height: 340)
-        maxSize = NSSize(width: 420, height: 480)
+        minSize = NSSize(width: 360, height: 170)
+        maxSize = NSSize(width: 360, height: 170)
     }
 
     override var canBecomeKey: Bool {

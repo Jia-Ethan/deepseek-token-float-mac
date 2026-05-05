@@ -7,10 +7,12 @@ This is an early MVP. It is a native macOS app, not an Electron app, web dashboa
 ## Current Features
 
 - Native macOS floating card built with SwiftUI and AppKit `NSPanel`.
-- Light Apple-style card: rounded glass surface, subtle shadow, clear information hierarchy.
-- Time span selector: Today, Week, 30D, and All.
+- Compact Apple-style desktop widget with dark translucent glass, rounded corners, and large numeric tiles.
+- Right-click time span selector: Today, Week, 30D, and All.
+- Single-click switches between local token usage and official balance.
+- Double-click opens Settings.
 - Official DeepSeek balance lookup via `GET https://api.deepseek.com/user/balance`.
-- Settings window for saving, testing, and clearing the DeepSeek API Key.
+- Settings window for pasting, saving, testing, and clearing the DeepSeek API Key.
 - API Key is stored in macOS Keychain, not in the repository.
 - Local SQLite usage database.
 - Manual CSV import for local usage records.

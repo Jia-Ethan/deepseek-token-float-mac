@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct SettingsView: View {
@@ -51,11 +52,19 @@ struct SettingsView: View {
                         .foregroundStyle(appState.apiKeySaved ? .green : .secondary)
                 }
 
-                SecureField(
-                    appState.apiKeySaved ? "Enter a new key to replace the saved key" : "sk-...",
-                    text: $apiKeyInput
-                )
-                .textFieldStyle(.roundedBorder)
+                HStack(spacing: 8) {
+                    PasteFriendlySecureField(
+                        text: $apiKeyInput,
+                        placeholder: appState.apiKeySaved ? "Enter a new key to replace the saved key" : "sk-..."
+                    )
+                    .frame(height: 24)
+
+                    Button("Paste") {
+                        if let pasted = NSPasteboard.general.string(forType: .string) {
+                            apiKeyInput = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
+                    }
+                }
 
                 HStack {
                     Button("Save") {
