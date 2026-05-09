@@ -25,9 +25,9 @@ final class FloatingPanel: NSPanel {
         hidesOnDeactivate = false
         backgroundColor = .clear
         isOpaque = false
-        hasShadow = true
-        minSize = NSSize(width: 360, height: 170)
-        maxSize = NSSize(width: 360, height: 170)
+        hasShadow = false
+        minSize = NSSize(width: 640, height: 430)
+        maxSize = NSSize(width: 640, height: 430)
     }
 
     override var canBecomeKey: Bool {

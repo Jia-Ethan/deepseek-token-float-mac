@@ -58,3 +58,50 @@ struct UsageSummary: Equatable {
         lastRecordAt: nil
     )
 }
+
+struct ModelUsageSummary: Equatable, Identifiable {
+    var id: String {
+        model
+    }
+
+    let model: String
+    let provider: String
+    let inputTokens: Int64
+    let outputTokens: Int64
+    let totalTokens: Int64
+    let estimatedCost: Double?
+    let requestCount: Int
+}
+
+struct DailyUsagePoint: Equatable, Identifiable {
+    var id: Date {
+        date
+    }
+
+    let date: Date
+    let inputTokens: Int64
+    let outputTokens: Int64
+    let totalTokens: Int64
+    let estimatedCost: Double?
+    let requestCount: Int
+}
+
+struct MonitorSnapshot: Equatable {
+    let span: TimeSpan
+    let usageSummary: UsageSummary
+    let modelSummaries: [ModelUsageSummary]
+    let dailyUsage: [DailyUsagePoint]
+    let balance: BalanceDisplaySnapshot?
+    let balanceStatus: BalanceStatus
+    let updatedAt: Date
+
+    static let empty = MonitorSnapshot(
+        span: .today,
+        usageSummary: .empty,
+        modelSummaries: [],
+        dailyUsage: [],
+        balance: nil,
+        balanceStatus: .idle,
+        updatedAt: Date(timeIntervalSince1970: 0)
+    )
+}

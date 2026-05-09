@@ -3,6 +3,7 @@ import Foundation
 enum TimeSpan: String, CaseIterable, Identifiable {
     case today
     case week
+    case month
     case thirtyDays
     case all
 
@@ -34,6 +35,13 @@ enum TimeSpan: String, CaseIterable, Identifiable {
             case .simplifiedChinese:
                 return "本周"
             }
+        case .month:
+            switch language {
+            case .english:
+                return "Month"
+            case .simplifiedChinese:
+                return "本月"
+            }
         case .thirtyDays:
             return "30D"
         case .all:
@@ -62,6 +70,13 @@ enum TimeSpan: String, CaseIterable, Identifiable {
             case .simplifiedChinese:
                 return "本周"
             }
+        case .month:
+            switch language {
+            case .english:
+                return "This month"
+            case .simplifiedChinese:
+                return "本月"
+            }
         case .thirtyDays:
             switch language {
             case .english:
@@ -89,6 +104,9 @@ enum TimeSpan: String, CaseIterable, Identifiable {
             return calendar.startOfDay(for: now)
         case .week:
             let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
+            return calendar.date(from: components)
+        case .month:
+            let components = calendar.dateComponents([.year, .month], from: now)
             return calendar.date(from: components)
         case .thirtyDays:
             return calendar.date(byAdding: .day, value: -30, to: now)

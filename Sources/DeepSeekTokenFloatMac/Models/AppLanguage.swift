@@ -53,6 +53,141 @@ struct LocalizedStrings {
         }
     }
 
+    var showWidgetMenuTitle: String {
+        switch language {
+        case .english:
+            return "Show Widget"
+        case .simplifiedChinese:
+            return "显示小工具"
+        }
+    }
+
+    var hideWidgetMenuTitle: String {
+        switch language {
+        case .english:
+            return "Hide Widget"
+        case .simplifiedChinese:
+            return "隐藏小工具"
+        }
+    }
+
+    var refreshBalanceMenuTitle: String {
+        switch language {
+        case .english:
+            return "Refresh Balance"
+        case .simplifiedChinese:
+            return "刷新余额"
+        }
+    }
+
+    var monthlySpend: String {
+        switch language {
+        case .english:
+            return "Monthly spend"
+        case .simplifiedChinese:
+            return "本月消费"
+        }
+    }
+
+    var apiRequests: String {
+        switch language {
+        case .english:
+            return "API requests"
+        case .simplifiedChinese:
+            return "API 请求"
+        }
+    }
+
+    var totalTokens: String {
+        switch language {
+        case .english:
+            return "Total tokens"
+        case .simplifiedChinese:
+            return "总 tokens"
+        }
+    }
+
+    var dailyTokenTrend: String {
+        switch language {
+        case .english:
+            return "Daily token trend"
+        case .simplifiedChinese:
+            return "按日 token 趋势"
+        }
+    }
+
+    var modelUsage: String {
+        switch language {
+        case .english:
+            return "Model usage"
+        case .simplifiedChinese:
+            return "模型用量"
+        }
+    }
+
+    var officialBalance: String {
+        switch language {
+        case .english:
+            return "Official balance"
+        case .simplifiedChinese:
+            return "官方余额"
+        }
+    }
+
+    var officialAPI: String {
+        switch language {
+        case .english:
+            return "Official API"
+        case .simplifiedChinese:
+            return "官方 API"
+        }
+    }
+
+    var localUsageSourceShort: String {
+        switch language {
+        case .english:
+            return "Local records"
+        case .simplifiedChinese:
+            return "本地记录"
+        }
+    }
+
+    var localAggregationNotice: String {
+        switch language {
+        case .english:
+            return "Usage is aggregated from local records or imported CSV."
+        case .simplifiedChinese:
+            return "用量来自本地记录或导入 CSV 聚合。"
+        }
+    }
+
+    var grantedShort: String {
+        switch language {
+        case .english:
+            return "grant"
+        case .simplifiedChinese:
+            return "赠金"
+        }
+    }
+
+    var toppedUpShort: String {
+        switch language {
+        case .english:
+            return "top-up"
+        case .simplifiedChinese:
+            return "充值"
+        }
+    }
+
+    var statusItemAccessibilityLabel: String {
+        switch language {
+        case .english:
+            return "DeepSeek Token Monitor"
+        case .simplifiedChinese:
+            return "DeepSeek Token Monitor"
+        }
+    }
+
     var quitMenuTitle: String {
         switch language {
         case .english:
@@ -219,6 +354,60 @@ struct LocalizedStrings {
         }
     }
 
+    var providerTitle: String {
+        switch language {
+        case .english:
+            return "Providers"
+        case .simplifiedChinese:
+            return "Provider"
+        }
+    }
+
+    var providerDescription: String {
+        switch language {
+        case .english:
+            return "DeepSeek is the only enabled provider in this phase. The app keeps the provider layer explicit so Kimi, OpenAI, and Claude can be added later without changing the monitor surface."
+        case .simplifiedChinese:
+            return "第一阶段只启用 DeepSeek。当前保留 provider 层，后续可接入 Kimi、OpenAI、Claude，而不需要重做监控面板。"
+        }
+    }
+
+    var enabledStatus: String {
+        switch language {
+        case .english:
+            return "Enabled"
+        case .simplifiedChinese:
+            return "已启用"
+        }
+    }
+
+    var plannedStatus: String {
+        switch language {
+        case .english:
+            return "Planned"
+        case .simplifiedChinese:
+            return "预留"
+        }
+    }
+
+    var providerReserved: String {
+        switch language {
+        case .english:
+            return "Reserved for later integration"
+        case .simplifiedChinese:
+            return "为后续接入预留"
+        }
+    }
+
+    var officialUsageAggregation: String {
+        switch language {
+        case .english:
+            return "Official usage aggregation"
+        case .simplifiedChinese:
+            return "官方用量聚合"
+        }
+    }
+
     var officialBalanceDescription: String {
         switch language {
         case .english:
@@ -231,9 +420,9 @@ struct LocalizedStrings {
     var tokenUsageDescription: String {
         switch language {
         case .english:
-            return "Token usage is currently local-only. DeepSeek public API docs do not expose a historical usage aggregation endpoint. Import CSV records to populate Today, Week, 30D, and All."
+            return "Token usage, model usage, request count, daily trend, and monthly spend are currently local-only. DeepSeek public API docs do not expose a historical usage aggregation endpoint. Import CSV records or capture future requests locally to populate Today, Week, Month, 30D, and All."
         case .simplifiedChinese:
-            return "Token 用量目前仅来自本地记录。DeepSeek 公开 API 文档没有历史用量聚合接口。可导入 CSV 记录来填充今天、本周、30 天和全部数据。"
+            return "Token 用量、模型用量、请求次数、按日趋势和本月消费目前仅来自本地记录。DeepSeek 公开 API 文档没有历史用量聚合接口。可导入 CSV 或后续通过本地采集来填充今天、本周、本月、30 天和全部数据。"
         }
     }
 
@@ -402,9 +591,9 @@ struct LocalizedStrings {
     var widgetHelp: String {
         switch language {
         case .english:
-            return "Click to switch usage/balance. Double-click for Settings. Right-click for time span."
+            return "Drag to move. Double-click for Settings. Right-click for time span."
         case .simplifiedChinese:
-            return "单击切换用量/余额。双击打开设置。右键选择时间跨度。"
+            return "可拖动面板。双击打开设置。右键选择时间跨度。"
         }
     }
 

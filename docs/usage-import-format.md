@@ -2,7 +2,7 @@
 
 The app does not claim official full-account token history unless DeepSeek exposes a formal historical usage API in the future.
 
-For the current MVP, token usage comes from local records imported into SQLite.
+For the current phase, token usage, API request count, model usage, daily charts, and estimated spend come from local records imported into SQLite.
 
 ## Required columns
 
@@ -16,7 +16,7 @@ For the current MVP, token usage comes from local records imported into SQLite.
 - `provider`: defaults to `deepseek`.
 - `model`: defaults to `unknown`.
 - `total_tokens`: defaults to `input_tokens + output_tokens`.
-- `estimated_cost`: decimal amount, usually USD unless your source says otherwise.
+- `estimated_cost`: decimal amount, usually USD unless your source says otherwise. Leave it blank when the source does not include cost.
 - `source`: defaults to `manual_csv_import`.
 
 ## Example
@@ -25,3 +25,13 @@ For the current MVP, token usage comes from local records imported into SQLite.
 timestamp,provider,model,input_tokens,output_tokens,total_tokens,estimated_cost,source
 2026-05-05T10:12:00Z,deepseek,deepseek-v4-flash,1200,360,1560,0.000269,manual_csv_import
 ```
+
+## Current aggregation
+
+The app aggregates local records by:
+
+- time span: Today, Week, Month, 30D, All
+- model
+- day
+
+Official DeepSeek balance is fetched live from the DeepSeek balance API. Historical usage remains local-only until DeepSeek exposes an official historical usage API or the app adds a local capture/proxy mode.

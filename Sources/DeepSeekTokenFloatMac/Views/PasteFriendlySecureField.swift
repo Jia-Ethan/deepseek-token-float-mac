@@ -21,6 +21,9 @@ struct PasteFriendlySecureField: NSViewRepresentable {
         textField.lineBreakMode = .byTruncatingMiddle
         textField.font = NSFont.systemFont(ofSize: 13)
         textField.focusRingType = .default
+        textField.textColor = NSColor(calibratedRed: 0.1137, green: 0.1137, blue: 0.1216, alpha: 1)
+        textField.backgroundColor = NSColor(calibratedWhite: 1, alpha: 0.96)
+        textField.placeholderAttributedString = attributedPlaceholder(placeholder)
         textField.target = context.coordinator
         textField.action = #selector(Coordinator.commit(_:))
         return textField
@@ -28,10 +31,20 @@ struct PasteFriendlySecureField: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSSecureTextField, context: Context) {
         context.coordinator.text = $text
-        nsView.placeholderString = placeholder
+        nsView.placeholderAttributedString = attributedPlaceholder(placeholder)
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
+    }
+
+    private func attributedPlaceholder(_ placeholder: String) -> NSAttributedString {
+        NSAttributedString(
+            string: placeholder,
+            attributes: [
+                .foregroundColor: NSColor(calibratedRed: 0.1137, green: 0.1137, blue: 0.1216, alpha: 0.48),
+                .font: NSFont.systemFont(ofSize: 13)
+            ]
+        )
     }
 
     final class Coordinator: NSObject, NSTextFieldDelegate {

@@ -12,6 +12,9 @@ final class AppState: ObservableObject {
         }
     }
     @Published private(set) var usageSummary: UsageSummary = .empty
+    @Published private(set) var modelSummaries: [ModelUsageSummary] = []
+    @Published private(set) var dailyUsage: [DailyUsagePoint] = []
+    @Published private(set) var monitorSnapshot: MonitorSnapshot = .empty
     @Published private(set) var balanceStatus: BalanceStatus = .idle
     @Published private(set) var apiKeySaved: Bool = false
     @Published var settingsMessage: String?
@@ -30,6 +33,8 @@ final class AppState: ObservableObject {
     var strings: LocalizedStrings {
         LocalizedStrings(language: language)
     }
+
+    let providerCapabilities = ProviderCapability.current
 
     private let keychain = KeychainStore()
     private let balanceClient = DeepSeekBalanceClient()
@@ -72,8 +77,10 @@ final class AppState: ObservableObject {
                 balanceStatus = .loaded(
                     BalanceSnapshot(response: response, updatedAt: Date())
                 )
+                rebuildMonitorSnapshot()
             } catch {
                 balanceStatus = .failed(error.localizedDescription)
+                rebuildMonitorSnapshot()
             }
         }
     }
@@ -132,6 +139,7 @@ final class AppState: ObservableObject {
                 balanceStatus = .loaded(
                     BalanceSnapshot(response: response, updatedAt: Date())
                 )
+                rebuildMonitorSnapshot()
                 showSettingsMessage(strings.connectionOK(isAvailable: response.isAvailable), isError: false)
             } catch {
                 showSettingsMessage(error.localizedDescription, isError: true)
@@ -182,13 +190,41 @@ final class AppState: ObservableObject {
         do {
             guard let database else {
                 usageSummary = .empty
+                modelSummaries = []
+                dailyUsage = []
+                rebuildMonitorSnapshot()
                 return
             }
             usageSummary = try database.summary(for: selectedSpan)
+            modelSummaries = try database.modelSummaries(for: selectedSpan)
+            dailyUsage = try database.dailyUsage(for: selectedSpan)
+            rebuildMonitorSnapshot()
         } catch {
             usageSummary = .empty
+            modelSummaries = []
+            dailyUsage = []
+            rebuildMonitorSnapshot()
             showSettingsMessage(error.localizedDescription, isError: true)
         }
+    }
+
+    private func rebuildMonitorSnapshot() {
+        let balance: BalanceDisplaySnapshot?
+        if case .loaded(let snapshot) = balanceStatus {
+            balance = BalanceDisplaySnapshot(snapshot: snapshot)
+        } else {
+            balance = nil
+        }
+
+        monitorSnapshot = MonitorSnapshot(
+            span: selectedSpan,
+            usageSummary: usageSummary,
+            modelSummaries: modelSummaries,
+            dailyUsage: dailyUsage,
+            balance: balance,
+            balanceStatus: balanceStatus,
+            updatedAt: Date()
+        )
     }
 
     private func showSettingsMessage(_ message: String, isError: Bool) {

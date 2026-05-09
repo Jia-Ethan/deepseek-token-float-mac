@@ -39,3 +39,22 @@ enum BalanceStatus: Equatable {
     case loaded(BalanceSnapshot)
     case failed(String)
 }
+
+struct BalanceDisplaySnapshot: Equatable {
+    let isAvailable: Bool
+    let currency: String
+    let totalBalance: Decimal?
+    let grantedBalance: Decimal?
+    let toppedUpBalance: Decimal?
+    let updatedAt: Date
+
+    init(snapshot: BalanceSnapshot) {
+        let primary = snapshot.response.balanceInfos.first
+        self.isAvailable = snapshot.response.isAvailable
+        self.currency = primary?.currency ?? "CNY"
+        self.totalBalance = primary.flatMap { Decimal(string: $0.totalBalance) }
+        self.grantedBalance = primary.flatMap { Decimal(string: $0.grantedBalance) }
+        self.toppedUpBalance = primary.flatMap { Decimal(string: $0.toppedUpBalance) }
+        self.updatedAt = snapshot.updatedAt
+    }
+}

@@ -45,6 +45,7 @@ Package.resolved
 *.p12
 *.mobileprovision
 DerivedData/
+dist/
 
 # macOS
 .DS_Store

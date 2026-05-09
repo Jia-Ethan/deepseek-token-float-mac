@@ -24,6 +24,13 @@ final class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = appState.strings.settingsWindowTitle
         window.styleMask = [.titled, .closable, .miniaturizable]
+        window.appearance = NSAppearance(named: .aqua)
+        window.backgroundColor = NSColor(
+            calibratedRed: 0.9608,
+            green: 0.9608,
+            blue: 0.9686,
+            alpha: 1
+        )
         window.setContentSize(NSSize(width: 560, height: 860))
         window.center()
         window.isReleasedWhenClosed = false
