@@ -24,6 +24,11 @@ final class AppState: ObservableObject {
             UserDefaults.standard.set(language.rawValue, forKey: UserDefaultsKeys.language)
         }
     }
+    @Published var preferences: AppPreferences = AppPreferences.saved() {
+        didSet {
+            preferences.save()
+        }
+    }
     @Published var theme: AppTheme = AppTheme.saved() {
         didSet {
             theme.save()

@@ -1,6 +1,8 @@
 import AppKit
 
 final class FloatingPanel: NSPanel {
+    var onFrameChanged: ((NSRect) -> Void)?
+
     init(contentRect: NSRect, backing: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(
             contentRect: contentRect,
@@ -28,6 +30,11 @@ final class FloatingPanel: NSPanel {
         hasShadow = false
         minSize = NSSize(width: 640, height: 430)
         maxSize = NSSize(width: 640, height: 430)
+    }
+
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        super.setFrame(frameRect, display: flag)
+        onFrameChanged?(frame)
     }
 
     override var canBecomeKey: Bool {

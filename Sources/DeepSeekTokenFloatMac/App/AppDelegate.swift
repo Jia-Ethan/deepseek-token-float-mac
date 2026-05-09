@@ -8,12 +8,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private let appState = AppState.shared
     private var cancellables = Set<AnyCancellable>()
+    private let panelSize = NSSize(width: 640, height: 430)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildApplicationMenu()
         buildStatusItem()
         observeLanguageChanges()
-        showFloatingPanel()
+        if appState.preferences.panelVisible {
+            showFloatingPanel()
+        } else {
+            rebuildStatusMenu()
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -35,26 +40,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .environmentObject(appState)
 
         let hostingController = NSHostingController(rootView: contentView)
-        let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let panelSize = NSSize(width: 640, height: 430)
-        let origin = NSPoint(
-            x: screenFrame.maxX - panelSize.width - 28,
-            y: screenFrame.maxY - panelSize.height - 28
-        )
+        let origin = savedPanelOrigin() ?? defaultPanelOrigin()
 
         let panel = FloatingPanel(
             contentRect: NSRect(origin: origin, size: panelSize),
             backing: .buffered,
             defer: false
         )
+        applyPanelLevel(panel)
+        panel.onFrameChanged = { [weak self] frame in
+            Task { @MainActor in
+                self?.savePanelOrigin(frame.origin)
+            }
+        }
         panel.contentViewController = hostingController
         panel.orderFrontRegardless()
         self.panel = panel
+        appState.preferences.panelVisible = true
         rebuildStatusMenu()
     }
 
     private func hideFloatingPanel() {
         panel?.orderOut(nil)
+        appState.preferences.panelVisible = false
         rebuildStatusMenu()
     }
 
@@ -104,6 +112,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshItem.target = self
         refreshItem.isEnabled = appState.apiKeySaved
         menu.addItem(refreshItem)
+
+        menu.addItem(.separator())
+
+        let keepOnTopItem = NSMenuItem(
+            title: strings.keepOnTopMenuTitle,
+            action: #selector(toggleKeepOnTop),
+            keyEquivalent: ""
+        )
+        keepOnTopItem.target = self
+        keepOnTopItem.state = appState.preferences.keepsPanelOnTop ? .on : .off
+        menu.addItem(keepOnTopItem)
+
+        let resetPositionItem = NSMenuItem(
+            title: strings.resetPanelPositionMenuTitle,
+            action: #selector(resetPanelPosition),
+            keyEquivalent: ""
+        )
+        resetPositionItem.target = self
+        menu.addItem(resetPositionItem)
 
         menu.addItem(.separator())
 
@@ -206,6 +233,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.fetchBalance()
     }
 
+    @objc private func toggleKeepOnTop() {
+        appState.preferences.keepsPanelOnTop.toggle()
+        if let panel {
+            applyPanelLevel(panel)
+        }
+        rebuildStatusMenu()
+    }
+
+    @objc private func resetPanelPosition() {
+        let origin = defaultPanelOrigin()
+        appState.preferences.panelOrigin = nil
+        if let panel {
+            panel.setFrame(NSRect(origin: origin, size: panelSize), display: true)
+            panel.orderFrontRegardless()
+        } else {
+            showFloatingPanel()
+        }
+        rebuildStatusMenu()
+    }
+
     private func observeLanguageChanges() {
         appState.$language
             .dropFirst()
@@ -225,5 +272,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.rebuildStatusMenu()
             }
             .store(in: &cancellables)
+    }
+
+    private func defaultPanelOrigin() -> NSPoint {
+        let screenFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        return NSPoint(
+            x: screenFrame.maxX - panelSize.width - 28,
+            y: screenFrame.maxY - panelSize.height - 28
+        )
+    }
+
+    private func savedPanelOrigin() -> NSPoint? {
+        guard let origin = appState.preferences.panelOrigin else {
+            return nil
+        }
+
+        let panelFrame = NSRect(origin: origin, size: panelSize)
+        let screens = NSScreen.screens.map(\.visibleFrame)
+        guard screens.contains(where: { $0.intersects(panelFrame) }) else {
+            return nil
+        }
+        return origin
+    }
+
+    private func savePanelOrigin(_ origin: NSPoint) {
+        guard panel?.isVisible == true else {
+            return
+        }
+        appState.preferences.panelOrigin = origin
+    }
+
+    private func applyPanelLevel(_ panel: FloatingPanel) {
+        panel.level = appState.preferences.keepsPanelOnTop ? .floating : .normal
     }
 }

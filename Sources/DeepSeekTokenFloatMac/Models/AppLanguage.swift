@@ -30,6 +30,10 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
 enum UserDefaultsKeys {
     static let language = "appLanguage"
+    static let keepsPanelOnTop = "keepsPanelOnTop"
+    static let panelVisible = "panelVisible"
+    static let panelOriginX = "panelOriginX"
+    static let panelOriginY = "panelOriginY"
 }
 
 struct LocalizedStrings {
@@ -77,6 +81,24 @@ struct LocalizedStrings {
             return "Refresh Balance"
         case .simplifiedChinese:
             return "刷新余额"
+        }
+    }
+
+    var keepOnTopMenuTitle: String {
+        switch language {
+        case .english:
+            return "Keep Panel on Top"
+        case .simplifiedChinese:
+            return "保持面板置顶"
+        }
+    }
+
+    var resetPanelPositionMenuTitle: String {
+        switch language {
+        case .english:
+            return "Reset Panel Position"
+        case .simplifiedChinese:
+            return "重置面板位置"
         }
     }
 
